@@ -103,6 +103,7 @@ sudo supervisorctl reread
 sudo supervisorctl update
 
 echo "==17== Configurando Nginx ==="
+read -p 'Indique la IP o dominio del servidor: ' serverip
 sudo tee /etc/nginx/sites-available/django_app > /dev/null <<EOF
 upstream django_app {
     server unix:/home/django/gunicorn.sock fail_timeout=0;
@@ -110,9 +111,6 @@ upstream django_app {
 
 server {
     listen 80;
-
-    # add here the ip address of your server
-    # or a domain pointing to that ip (like example.com or www.example.com)
     server_name $serverip;
 
     keepalive_timeout 5;
@@ -125,7 +123,6 @@ server {
         alias /home/django/static/;
     }
 
-    # checks for static file, if not found proxy to app
     location / {
         try_files \$uri @proxy_to_app;
     }
@@ -155,4 +152,7 @@ sudo -u django /home/django/.venv/bin/python /home/django/$project/manage.py mig
 sudo -u django /home/django/.venv/bin/python /home/django/$project/manage.py collectstatic --noinput
 sudo chown django:django /home/django/ -R
 sudo chown django:django /home/django/.venv/ -R
+sudo supervisorctl restart django_app
+sudo tail -n 40 /home/django/logs/gunicorn-error.log
+sudo supervisorctl status
 sudo supervisorctl restart django_app
