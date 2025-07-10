@@ -22,8 +22,8 @@ echo "==7== Iniciamos Supervisor: === "
 sudo systemctl enable supervisor
 sudo systemctl start supervisor
 
-echo "==8== Instalamos python-virtualenv: === "
-sudo apt-get -qq install python-virtualenv
+echo "==8== Instalamos python3-venv: === "
+sudo apt-get -qq install python3-venv
 
 echo "==9== Configuramos PostgreSQL: === "
 sudo su - postgres -c "createuser -s django"
@@ -35,7 +35,7 @@ sudo adduser --system --quiet --shell=/bin/bash --home=/home/django --gecos 'dja
 gpasswd -a django sudo
 
 echo "==10== Creamos el entorno virtual === "
-virtualenv /home/django/.venv --python=python3
+python3 -m venv /home/django/.venv
 source /home/django/.venv/bin/activate
 
 echo "==11== Creamos el entorno virtual === "
