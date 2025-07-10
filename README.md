@@ -1,8 +1,8 @@
 # Instalando Django Easy
 
 ```
-git clone https://github.com/falconsoft3d/instalar-django-server-easy
-cd instalar-django-server-easy
+git clone https://github.com/JuanDiego3030/deploy-django
+cd deploy-django
 sudo chmod u+x django_install.sh
 ./django_install.sh
 ```
