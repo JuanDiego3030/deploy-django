@@ -32,18 +32,17 @@ sudo -u postgres psql -c "ALTER USER django WITH PASSWORD 'django'"
 
 # Creamos el usuario del sistema
 sudo adduser --system --quiet --shell=/bin/bash --home=/home/django --gecos 'django' --group django
-gpasswd -a django sudo
+sudo gpasswd -a django sudo
 
 echo "==10== Creamos el entorno virtual === "
-python3 -m venv /home/django/.venv
-source /home/django/.venv/bin/activate
+sudo -u django python3 -m venv /home/django/.venv
 
-echo "==11== Creamos el entorno virtual === "
-pip install -q Django
+echo "==11== Instalamos Django en el entorno virtual === "
+sudo -u django /home/django/.venv/bin/pip install -q Django
 
 echo "==12== Clonamos el proyecto === "
 read -p 'Indique la dirección del repo a clonar (https://github.com/falconsoft3d/django-father): ' gitrepo
-git -C /home/django clone $gitrepo
+sudo -u django git -C /home/django clone $gitrepo
 read -p 'Indique la el nombre de la carpeta del proyecto (django-father): ' project
 read -p 'Indique el nombre de la app principal de Django (father): ' djapp
 
