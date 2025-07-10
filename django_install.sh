@@ -98,48 +98,51 @@ sudo supervisorctl reread
 sudo supervisorctl update
 
 echo "==17== Configurando Nginx ==="
-touch /etc/nginx/sites-available/django_app
-echo 'upstream django_app {' >> /etc/nginx/sites-available/django_app
-echo '    server unix:/home/django/gunicorn.sock fail_timeout=0;' >> /etc/nginx/sites-available/django_app
-echo '}' >> /etc/nginx/sites-available/django_app
-echo '' >> /etc/nginx/sites-available/django_app
-echo 'server {' >> /etc/nginx/sites-available/django_app
-echo '    listen 80;' >> /etc/nginx/sites-available/django_app
-echo '' >> /etc/nginx/sites-available/django_app
-echo '    # add here the ip address of your server' >> /etc/nginx/sites-available/django_app
-echo '    # or a domain pointing to that ip (like example.com or www.example.com)' >> /etc/nginx/sites-available/django_app
-read -p 'Indique la IP del servidor: ' serverip
-echo '    server_name '$serverip';' >> /etc/nginx/sites-available/django_app
-echo '' >> /etc/nginx/sites-available/django_app
-echo '    keepalive_timeout 5;' >> /etc/nginx/sites-available/django_app
-echo '    client_max_body_size 4G;' >> /etc/nginx/sites-available/django_app
-echo '' >> /etc/nginx/sites-available/django_app
-echo '    access_log /home/django/logs/nginx-access.log;' >> /etc/nginx/sites-available/django_app
-echo '    error_log /home/django/logs/nginx-error.log;' >> /etc/nginx/sites-available/django_app
-echo '' >> /etc/nginx/sites-available/django_app
-echo '    location /static/ {' >> /etc/nginx/sites-available/django_app
-echo '        alias /home/django/static/;' >> /etc/nginx/sites-available/django_app
-echo '    }' >> /etc/nginx/sites-available/django_app
-echo '' >> /etc/nginx/sites-available/django_app
-echo '    # checks for static file, if not found proxy to app' >> /etc/nginx/sites-available/django_app
-echo '    location / {' >> /etc/nginx/sites-available/django_app
-echo '        try_files $uri @proxy_to_app;' >> /etc/nginx/sites-available/django_app
-echo '    }' >> /etc/nginx/sites-available/django_app
-echo '' >> /etc/nginx/sites-available/django_app
-echo '    location @proxy_to_app {' >> /etc/nginx/sites-available/django_app
-echo '      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> /etc/nginx/sites-available/django_app
-echo '      proxy_set_header Host $http_host;' >> /etc/nginx/sites-available/django_app
-echo '      proxy_redirect off;' >> /etc/nginx/sites-available/django_app
-echo '      proxy_pass http://django_app;' >> /etc/nginx/sites-available/django_app
-echo '    }' >> /etc/nginx/sites-available/django_app
-echo '}' >> /etc/nginx/sites-available/django_app
-# Le metemos la IP al settings al final
-echo 'from .settings import ALLOWED_HOSTS' >> /home/django/$project/$djapp/localsettings.py
-echo 'ALLOWED_HOSTS += ["'$serverip'"]' >> /home/django/$project/$djapp/localsettings.py
-echo 'STATIC_ROOT = "/home/django/static/"' >> /home/django/$project/$djapp/localsettings.py
+sudo tee /etc/nginx/sites-available/django_app > /dev/null <<EOF
+upstream django_app {
+    server unix:/home/django/gunicorn.sock fail_timeout=0;
+}
 
-sudo ln -s /etc/nginx/sites-available/django_app /etc/nginx/sites-enabled/django_app
-sudo rm /etc/nginx/sites-enabled/default
+server {
+    listen 80;
+
+    # add here the ip address of your server
+    # or a domain pointing to that ip (like example.com or www.example.com)
+    server_name $serverip;
+
+    keepalive_timeout 5;
+    client_max_body_size 4G;
+
+    access_log /home/django/logs/nginx-access.log;
+    error_log /home/django/logs/nginx-error.log;
+
+    location /static/ {
+        alias /home/django/static/;
+    }
+
+    # checks for static file, if not found proxy to app
+    location / {
+        try_files \$uri @proxy_to_app;
+    }
+
+    location @proxy_to_app {
+      proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+      proxy_set_header Host \$http_host;
+      proxy_redirect off;
+      proxy_pass http://django_app;
+    }
+}
+EOF
+
+# Le metemos la IP al settings al final
+sudo tee /home/django/$project/$djapp/localsettings.py > /dev/null <<EOF
+from .settings import ALLOWED_HOSTS
+ALLOWED_HOSTS += ["$serverip"]
+STATIC_ROOT = "/home/django/static/"
+EOF
+
+sudo ln -sf /etc/nginx/sites-available/django_app /etc/nginx/sites-enabled/django_app
+sudo rm -f /etc/nginx/sites-enabled/default
 sudo service nginx restart
 
 echo "=== Finalizando ==="
